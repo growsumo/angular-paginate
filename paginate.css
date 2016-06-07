@@ -1,0 +1,17 @@
+.scroller{
+  height: 300px;
+  width: 500px;
+  overflow-y:scroll;
+  background-color: #FFE;
+}
+
+.item{
+  margin : 4px;
+  background-color:pink;
+}
+
+.clearfix:after {
+    content: "";
+    display: table;
+    clear: both;
+}
