@@ -10,9 +10,9 @@
     </head>
     <body ng-app="myApp">
         <div ng-controller="ct">
-            <paginate page-message="page_message" pdata="items" class="scroller" type="click" direction="down" page-func="doWork()">
-                <div class="item" ng-repeat="item in items">
-                    {{item.position}} : {{item.name}}
+            <paginate page-message="paginator.page_message" items="paginator.items" class="scroller" type="click" direction="up" page-func="paginator.pageFunc(success,error)">
+                <div class="item" ng-repeat="item in paginator.items">
+                    {{item.name}} : {{item.age}}
                 </div>
             </paginate>
         </div>

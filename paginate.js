@@ -1,21 +1,26 @@
 var paginateControllerDeps = ['$scope','$element','$timeout'];
 var paginateController = function($scope,$element,$timeout){
     var ctrl = this;
-    ctrl.oldScroll = 0;
     $scope.addResults = function(){
         // Get current scroll height
-        oldScroll = getScrollHeight();
+        scroll.old = scroll.get();
 
         // Add results to list
-        var op = ctrl.direction == 'up' ? 'unshift' : 'push';
-        ctrl.pdata[op]({name : "Tony Hawk", position : "test data1"});
-        ctrl.pdata[op]({name : "Squirtle", position : "test data2"});
-        ctrl.pdata[op]({name : "Ned Larsen", position : "Museum Curator"});
-        ctrl.pdata[op]({name : "Petunia Smith", position : "test data 3"});
-        ctrl.pdata[op]({name : "Fernandez Ocho", position : "Lawnmower Technician"});
+        ctrl.pageFunc({success : function(r){
+            // var op = ctrl.direction == 'up' ? 'prepend' : 'append';
+            // ctrl.items[op](r)
+            if(ctrl.direction == 'up'){
+                ctrl.items = r.concat(ctrl.items);
+            }else{
+                ctrl.items = ctrl.items.concat(r);
+            }
 
-        // Set the scrolling after digest
-        $timeout(setScroll);
+            // Set the scrolling after digest
+            $timeout(scroll.set);
+        }, error : function(r){
+            console.log("error");
+        }});
+
     }
 
     ctrl.$onInit = function(){
@@ -27,46 +32,46 @@ var paginateController = function($scope,$element,$timeout){
         if(ctrl.type == 'scroll' && ctrl.direction == 'down') $scope.bscroll = true;
 
         // Bind scroll handlers
-        if(ctrl.type == 'scroll') bindScroll();
+        if(ctrl.type == 'scroll') scroll.bind();
 
         // Wait for data-binding to scroll to top/bottom
         $timeout(function(){
-            if(ctrl.direction == 'down') scrollToTop();
-            if(ctrl.direction == 'up') scrollToBottom();
+            if(ctrl.direction == 'down') scroll.toTop();
+            if(ctrl.direction == 'up') scroll.toBottom();
         });
     }
 
     ctrl.$onDestroy = function(){
-        bindScroll(true); // Unbind scroll
+        scroll.bind(true); // Unbind scroll
     }
 
-    function getScrollHeight(){
-        return $element[0].firstChild.scrollHeight;
-    }
+    var scroll = {
+        old : 0, // Old scroll container height
+        toTop : function(){
+            $element[0].firstChild.scrollTop = 0;
+        },
 
-    function setScroll(){
-        if(ctrl.direction == 'down') return;
-        var v = (getScrollHeight() - oldScroll);
-        $element[0].firstChild.scrollTop = v;
-    }
+        toBottom : function(){
+            $element[0].firstChild.scrollTop = $element[0].firstChild.scrollHeight;
+        },
+        get : function(){
+            return $element[0].firstChild.scrollHeight;
+        },
+        set : function(){
+            if(ctrl.direction == 'down') return;
+            var v = (scroll.get() - scroll.old);
+            $element[0].firstChild.scrollTop = v;
+        },
+        bind : function(justUnbind){
+            angular.element($element[0].firstChild).unbind('scroll');
+            if(justUnbind == undefined) angular.element($element[0].firstChild).bind('scroll', function(e){
+                // Direction is up and scroll has reached top
+                if($scope.tscroll && !e.target.scrollTop) $timeout($scope.addResults);
 
-    function scrollToBottom(){
-        $element[0].firstChild.scrollTop = $element[0].firstChild.scrollHeight;
-    }
-
-    function scrollToTop(){
-        $element[0].firstChild.scrollTop = 0;
-    }
-
-    function bindScroll(justUnbind){
-        angular.element($element[0].firstChild).unbind('scroll');
-        if(justUnbind == undefined) angular.element($element[0].firstChild).bind('scroll', function(e){
-            // Direction is up and scroll has reached top
-            if($scope.tscroll && !e.target.scrollTop) $timeout($scope.addResults);
-
-            // Direction is down and scroll has reached bottom
-            else if($scope.bscroll && e.target.scrollTop + $(e.target).innerHeight() >= e.target.scrollHeight) $timeout($scope.addResults);
-        });
+                // Direction is down and scroll has reached bottom
+                else if($scope.bscroll && e.target.scrollTop + $(e.target).innerHeight() >= e.target.scrollHeight) $timeout($scope.addResults);
+            });
+        }
     }
 };
 
@@ -76,26 +81,27 @@ angular.module('myApp',[])
 .component('paginate', {
     transclude: true,
     bindings: {
-        pageMessage:'=',
+        pageMessage:'=', // Clickable message for loading more data
+        items : '=', // The list of items
+        type : '@', // Type of pagination: click or scroll
+        direction : '@', // Direction of scrolling: up or down
         pageFunc : '&',
-        pdata : '=',
-        type : '@',
-        direction : '@',
+
+        lastKey : '=',
+        orderBy : '=',
+        query : '=',
     },
-    templateUrl: 'template.html',
+    templateUrl: 'paginateTemplate.html',
     controller : paginateController
 })
-.controller('ct',function($scope) {
-    $scope.page_message = "Show more results"
-    $scope.items = [];
+.controller('ct',function($scope, $http) {
+    $scope.paginator = {};
+    $scope.paginator.page_message = "Get more items!"
+    $scope.paginator.items = [];
+    $scope.paginator.pageFunc = newPage;
+    $scope.paginator.error = false;
 
-    addPage();
-
-    function addPage(){
-        $scope.items.push({name : "Ben Bales", position : "Programmer"});
-        $scope.items.push({name : "Peter Pasa", position : "Writer"});
-        $scope.items.push({name : "Alpha Beta", position : "Tester"});
-        $scope.items.push({name : "Nelly Nellis", position : "Admin"});
-        $scope.items.push({name : "Tupak Chudleigh", position : "Athlete"});
+    function newPage(success,error){
+        $http.get('/testData.json').success(success).error(error);
     }
 });

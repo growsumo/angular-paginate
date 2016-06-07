@@ -1,9 +1,9 @@
 <div style="border: 1px solid black;" class="scroller">
     <div ng-if="tclick" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
-        {{$ctrl.pageMessage}} ({{$ctrl.pdata.length}})
+        {{$ctrl.pageMessage}}
     </div>
     <ng-transclude style="overflow:hidden;"></ng-transclude>
     <div ng-if="bclick" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
-        {{$ctrl.pageMessage}} ({{$ctrl.pdata.length}})
+        {{$ctrl.pageMessage}}
     </div>
 </div>
