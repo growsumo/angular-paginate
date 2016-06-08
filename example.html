@@ -8,8 +8,27 @@
         <script src="https://code.angularjs.org/1.5.5/angular.min.js"></script>
         <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
         <script src="paginate.js"></script>
+        <script type="text/javascript">
+            angular.module("ctt",["paginate.paginate"]).controller('ct',function($scope, $http) {
+                $scope.paginator = {
+                    'items' : [],
+                    'pageFunc' : newPage,
+                    'orderBy' : 'name',
+                    'query' : 'test',
+                };
+
+                newPage().success(function(r){
+                    $scope.paginator.items = r.concat($scope.paginator.items)
+                });
+
+                function newPage(){
+                    // Use query, orderBy, lastKey to get paginated data
+                    return $http.get('/testData.json')
+                }
+            })
+        </script>
     </head>
-    <body ng-app="myApp">
+    <body ng-app="ctt">
         <div ng-controller="ct">
             <div class="sort">
                 Sort by:
@@ -17,7 +36,7 @@
                 <span ng-click="paginate.orderBy = 'age'">Age</span>
             </div>
             <input type="text" ng-model="paginator.query" name="name" value="">
-            <paginate page-message="paginator.page_message" items="paginator.items" class="scroller" query="paginator.query" order-by="paginate.orderBy" type="scroll" direction="down" page-func="paginator.pageFunc()">
+            <paginate items="paginator.items" query="paginator.query" order-by="paginate.orderBy" type="scroll" direction="down" page-func="paginator.pageFunc()">
                 <div class="item" ng-repeat="item in paginator.items">
                     {{item.name}} : {{item.age}}
                 </div>

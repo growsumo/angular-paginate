@@ -33,6 +33,9 @@ var paginateController = function($scope,$element,$timeout){
             if(ctrl.direction == 'up') ctrl.items = r.concat(ctrl.items);
             else ctrl.items = ctrl.items.concat(r);
 
+            // Are there more results
+            if(true) $scope.noMore = false;
+
             // Hide loader
             $scope.loading = false;
 
@@ -62,34 +65,32 @@ var paginateController = function($scope,$element,$timeout){
         });
 
         // Watches
-        // ctrl.$watch('orderBy', function(){
-        //     console.log('order changed')
-        // })
-        //
-        // ctrl.$watch(['query'], function(){
-        //     console.log('query changed')
-        // })
-        //
-        // ctrl.$watch(['orderBy'], function(){
-        //     console.log('orderBy changed')
-        // })
-
         ctrl.$watchMany(['orderBy', 'query'], function(){
-            console.log('either changed')
+            // If either of these changes, all data must be pulled again
+            ctrl.items = [];
+            $scope.addResults();
         })
+
+        // Default One-way bind values
+        if(_.isUndefined(ctrl.loadingMessage)) ctrl.loadingMessage = "Loading more items..."
+        if(_.isUndefined(ctrl.pageMessage)) ctrl.pageMessage = "Load more items"
+        if(_.isUndefined(ctrl.errorMessage)) ctrl.errorMessage = "There was a problem retreiving items."
+
+        // Initialize Scope Flags
+        $scope.noMore = false;
+        $scope.loading = false;
+        $scope.error = false;
     }
 
     ctrl.$onDestroy = function(){
         scroll.bind(true); // Unbind scroll
     }
 
-
     var scroll = {
         old : 0, // Old scroll container height
         toTop : function(){
             scroll.element.scrollTop = 0;
         },
-
         toBottom : function(){
             scroll.element.scrollTop = scroll.element.scrollHeight;
         },
@@ -104,6 +105,9 @@ var paginateController = function($scope,$element,$timeout){
         bind : function(justUnbind){
             angular.element(scroll.element).unbind('scroll');
             if(_.isUndefined(justUnbind)) angular.element(scroll.element).bind('scroll', function(e){
+                // If there are no more results, dont do anything!
+                if($scope.noMore) return;
+
                 // Direction is up and scroll has reached top
                 if($scope.tscroll && !scroll.element.scrollTop) $timeout($scope.addResults);
 
@@ -113,61 +117,26 @@ var paginateController = function($scope,$element,$timeout){
         }
     };
     Object.defineProperty(scroll, 'element', { get : function(){return $element[0].firstChild;}}) // Element is a dynamic property
-
 };
 
 paginateController.$inject = paginateControllerDeps;
 
-angular.module('myApp',[])
+angular.module('paginate.paginate',[])
 .component('paginate', {
     transclude: true,
     bindings: {
         type : '@', // Type of pagination: click or scroll
         direction : '@', // Direction of scrolling: up or down
+        pageMessage: '@', // Clickable message for loading more data
+        errorMessage : '@', // Error message
+        loadingMessage : '@',
         pageFunc : '&',
 
-        pageMessage:'=', // Clickable message for loading more data
         items : '=', // The list of items
         lastKey : '=', // Unique key of the last item
-        orderBy : '=',
-        query : '=',
+        orderBy : '=', // Ordering parameter
+        query : '=', // Search keywords
     },
     templateUrl: 'paginateTemplate.html',
     controller : paginateController
-})
-.controller('ct',function($scope, $http) {
-    $scope.paginator = {
-        'page_message' : "Get more items!",
-        'items' : [],
-        'pageFunc' : newPage,
-        'orderBy' : 'name',
-        'query' : 'test',
-    };
-
-    newPage().success(function(r){
-        r.forEach(function(a){
-            a.age = _.now();
-            a.id = _.now();
-        })
-        $scope.paginator.items = r.concat($scope.paginator.items)
-    });
-    newPage().success(function(r){
-        r.forEach(function(a){
-            a.age = _.now();
-            a.id = _.now();
-        })
-        $scope.paginator.items = r.concat($scope.paginator.items)
-    });
-    newPage().success(function(r){
-        r.forEach(function(a){
-            a.age = _.now();
-            a.id = _.now();
-        })
-        $scope.paginator.items = r.concat($scope.paginator.items)
-    });
-
-    function newPage(){
-        // Use query, orderBy, lastKey to get paginated data
-        return $http.get('/testData.json')
-    }
 })
