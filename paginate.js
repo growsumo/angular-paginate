@@ -61,9 +61,6 @@ var paginateController = function($scope,$element,$timeout){
             if(ctrl.direction == 'up') scroll.toBottom();
         });
 
-        // Add $watch to component to simplify (implement lodash get later for better object traversal)
-
-
         // Watches
         // ctrl.$watch('orderBy', function(){
         //     console.log('order changed')
@@ -86,34 +83,37 @@ var paginateController = function($scope,$element,$timeout){
         scroll.bind(true); // Unbind scroll
     }
 
+
     var scroll = {
         old : 0, // Old scroll container height
         toTop : function(){
-            $element[0].firstChild.scrollTop = 0;
+            scroll.element.scrollTop = 0;
         },
 
         toBottom : function(){
-            $element[0].firstChild.scrollTop = $element[0].firstChild.scrollHeight;
+            scroll.element.scrollTop = scroll.element.scrollHeight;
         },
         get : function(){
-            return $element[0].firstChild.scrollHeight;
+            return scroll.element.scrollHeight;
         },
         set : function(){
             if(ctrl.direction == 'down') return;
             var v = (scroll.get() - scroll.old);
-            $element[0].firstChild.scrollTop = v;
+            scroll.element.scrollTop = v;
         },
         bind : function(justUnbind){
-            angular.element($element[0].firstChild).unbind('scroll');
-            if(justUnbind == undefined) angular.element($element[0].firstChild).bind('scroll', function(e){
+            angular.element(scroll.element).unbind('scroll');
+            if(_.isUndefined(justUnbind)) angular.element(scroll.element).bind('scroll', function(e){
                 // Direction is up and scroll has reached top
-                if($scope.tscroll && !e.target.scrollTop) $timeout($scope.addResults);
+                if($scope.tscroll && !scroll.element.scrollTop) $timeout($scope.addResults);
 
                 // Direction is down and scroll has reached bottom
-                else if($scope.bscroll && e.target.scrollTop + $(e.target).innerHeight() >= e.target.scrollHeight) $timeout($scope.addResults);
+                else if($scope.bscroll && scroll.element.scrollTop + $(scroll.element).innerHeight() >= scroll.element.scrollHeight) $timeout($scope.addResults);
             });
         }
-    }
+    };
+    Object.defineProperty(scroll, 'element', { get : function(){return $element[0].firstChild;}}) // Element is a dynamic property
+
 };
 
 paginateController.$inject = paginateControllerDeps;
@@ -143,6 +143,28 @@ angular.module('myApp',[])
         'orderBy' : 'name',
         'query' : 'test',
     };
+
+    newPage().success(function(r){
+        r.forEach(function(a){
+            a.age = _.now();
+            a.id = _.now();
+        })
+        $scope.paginator.items = r.concat($scope.paginator.items)
+    });
+    newPage().success(function(r){
+        r.forEach(function(a){
+            a.age = _.now();
+            a.id = _.now();
+        })
+        $scope.paginator.items = r.concat($scope.paginator.items)
+    });
+    newPage().success(function(r){
+        r.forEach(function(a){
+            a.age = _.now();
+            a.id = _.now();
+        })
+        $scope.paginator.items = r.concat($scope.paginator.items)
+    });
 
     function newPage(){
         // Use query, orderBy, lastKey to get paginated data

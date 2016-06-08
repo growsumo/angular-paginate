@@ -1,2 +1,3 @@
-# ngPaginate
-flexible pagination component for Angular applications.
+# angular-paginate
+
+Flexible pagination component for Angular applications.
