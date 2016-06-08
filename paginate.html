@@ -4,13 +4,20 @@
         <meta charset="utf-8">
         <title></title>
         <link rel="stylesheet" href="paginate.css" media="screen" title="no title" charset="utf-8">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.13.1/lodash.js"></script>
         <script src="https://code.angularjs.org/1.5.5/angular.min.js"></script>
         <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
         <script src="paginate.js"></script>
     </head>
     <body ng-app="myApp">
         <div ng-controller="ct">
-            <paginate page-message="paginator.page_message" items="paginator.items" class="scroller" type="click" direction="up" page-func="paginator.pageFunc(success,error)">
+            <div class="sort">
+                Sort by:
+                <span ng-click="paginate.orderBy = 'name'">Name</span>
+                <span ng-click="paginate.orderBy = 'age'">Age</span>
+            </div>
+            <input type="text" ng-model="paginator.query" name="name" value="">
+            <paginate page-message="paginator.page_message" items="paginator.items" class="scroller" query="paginator.query" order-by="paginate.orderBy" type="click" direction="up" page-func="paginator.pageFunc()">
                 <div class="item" ng-repeat="item in paginator.items">
                     {{item.name}} : {{item.age}}
                 </div>

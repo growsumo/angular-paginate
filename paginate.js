@@ -1,26 +1,47 @@
+Object.prototype.componentExtend = function(scope){
+    this.$watch = function(prop,handler){
+        if(!_.isString(prop)) throw "Property must be a string path"
+        scope.$watch(angular.bind(this,function(){
+            return _.get(this, prop);
+        }), handler)
+    }
+
+    this.$watchMany = function(props,handler){
+        if(!_.isArray(props)) throw "Properties must be an array of string paths";
+        for(var i = 0; i < props.length; i ++) this.$watch(props[i],handler)
+    }
+}
+
 var paginateControllerDeps = ['$scope','$element','$timeout'];
 var paginateController = function($scope,$element,$timeout){
+    this.componentExtend($scope);
     var ctrl = this;
+
     $scope.addResults = function(){
+        // Show loader
+        $scope.loading = true;
+
+        // No Errors.. yet
+        $scope.error = false;
+
         // Get current scroll height
         scroll.old = scroll.get();
 
         // Add results to list
-        ctrl.pageFunc({success : function(r){
-            // var op = ctrl.direction == 'up' ? 'prepend' : 'append';
-            // ctrl.items[op](r)
-            if(ctrl.direction == 'up'){
-                ctrl.items = r.concat(ctrl.items);
-            }else{
-                ctrl.items = ctrl.items.concat(r);
-            }
+        ctrl.pageFunc().success(function(r){
+            // Depending on direction, add items to front or back of items
+            if(ctrl.direction == 'up') ctrl.items = r.concat(ctrl.items);
+            else ctrl.items = ctrl.items.concat(r);
+
+            // Hide loader
+            $scope.loading = false;
 
             // Set the scrolling after digest
             $timeout(scroll.set);
-        }, error : function(r){
-            console.log("error");
-        }});
-
+        }).error(function(r){
+            // Error
+            $scope.error = true;
+        });
     }
 
     ctrl.$onInit = function(){
@@ -39,6 +60,26 @@ var paginateController = function($scope,$element,$timeout){
             if(ctrl.direction == 'down') scroll.toTop();
             if(ctrl.direction == 'up') scroll.toBottom();
         });
+
+        // Add $watch to component to simplify (implement lodash get later for better object traversal)
+
+
+        // Watches
+        // ctrl.$watch('orderBy', function(){
+        //     console.log('order changed')
+        // })
+        //
+        // ctrl.$watch(['query'], function(){
+        //     console.log('query changed')
+        // })
+        //
+        // ctrl.$watch(['orderBy'], function(){
+        //     console.log('orderBy changed')
+        // })
+
+        ctrl.$watchMany(['orderBy', 'query'], function(){
+            console.log('either changed')
+        })
     }
 
     ctrl.$onDestroy = function(){
@@ -81,13 +122,13 @@ angular.module('myApp',[])
 .component('paginate', {
     transclude: true,
     bindings: {
-        pageMessage:'=', // Clickable message for loading more data
-        items : '=', // The list of items
         type : '@', // Type of pagination: click or scroll
         direction : '@', // Direction of scrolling: up or down
         pageFunc : '&',
 
-        lastKey : '=',
+        pageMessage:'=', // Clickable message for loading more data
+        items : '=', // The list of items
+        lastKey : '=', // Unique key of the last item
         orderBy : '=',
         query : '=',
     },
@@ -95,13 +136,16 @@ angular.module('myApp',[])
     controller : paginateController
 })
 .controller('ct',function($scope, $http) {
-    $scope.paginator = {};
-    $scope.paginator.page_message = "Get more items!"
-    $scope.paginator.items = [];
-    $scope.paginator.pageFunc = newPage;
-    $scope.paginator.error = false;
+    $scope.paginator = {
+        'page_message' : "Get more items!",
+        'items' : [],
+        'pageFunc' : newPage,
+        'orderBy' : 'name',
+        'query' : 'test',
+    };
 
-    function newPage(success,error){
-        $http.get('/testData.json').success(success).error(error);
+    function newPage(){
+        // Use query, orderBy, lastKey to get paginated data
+        return $http.get('/testData.json')
     }
-});
+})

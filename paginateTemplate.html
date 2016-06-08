@@ -1,9 +1,12 @@
-<div style="border: 1px solid black;" class="scroller">
+<div style="border: 1px solid black;" class="paginate-scroller">
+
     <div ng-if="tclick" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
         {{$ctrl.pageMessage}}
+        <div class="paginate-loader" ng-show="loading">Loading...</div>
     </div>
     <ng-transclude style="overflow:hidden;"></ng-transclude>
     <div ng-if="bclick" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
         {{$ctrl.pageMessage}}
+        <div class="paginate-loader" ng-show="loading">Loading...</div>
     </div>
 </div>
