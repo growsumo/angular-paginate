@@ -1,5 +1,7 @@
 <div style="border: 1px solid black;" class="paginate-scroller">
-
+    <div ng-show="(tclick || tscroll) && noMore">
+        No more fam.
+    </div>
     <div ng-if="tclick && !noMore" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
         {{$ctrl.pageMessage}}
         <div class="paginate-loader" ng-show="loading">Loading...</div>
@@ -8,5 +10,8 @@
     <div ng-if="bclick && !noMore" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
         {{$ctrl.pageMessage}}
         <div class="paginate-loader" ng-show="loading">Loading...</div>
+    </div>
+    <div ng-show="(bclick || bscroll) && noMore">
+        {{$ctrl.noMoreMessage}}
     </div>
 </div>

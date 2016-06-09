@@ -1,4 +1,7 @@
 Object.prototype.componentExtend = function(scope){
+    // Check for scope
+    if(_.isUndefined(scope)) throw("Object.prototype.componentExtend: scoep must be passed in as agrument");
+
     this.$watch = function(prop,handler){
         if(!_.isString(prop)) throw "Property must be a string path"
         scope.$watch(angular.bind(this,function(){
@@ -33,8 +36,7 @@ var paginateController = function($scope,$element,$timeout){
             if(ctrl.direction == 'up') ctrl.items = r.concat(ctrl.items);
             else ctrl.items = ctrl.items.concat(r);
 
-            // Are there more results
-            if(true) $scope.noMore = false;
+            if(Math.floor(Math.random()*10) == 5) $scope.noMore = true;
 
             // Hide loader
             $scope.loading = false;
@@ -47,7 +49,15 @@ var paginateController = function($scope,$element,$timeout){
         });
     }
 
+    ctrl.initializing = false;
     ctrl.$onInit = function(){
+        ctrl.initializing = true;
+        // Check required params
+        if(_.isUndefined(ctrl.type)) throw("angular-paginate: type attribute required can be 'click' or 'scroll'");
+        if(_.isUndefined(ctrl.direction)) throw("angular-paginate: direction attribute required can be 'up' or 'down'");
+        if(_.isUndefined(ctrl.items) && _.isArray(ctrl.items)) throw("angular-paginate: items attribute required, must be an array");
+        if(_.isUndefined(ctrl.items) && _.isArray(ctrl.items)) throw("angular-paginate: items attribute required, must be an array");
+
         // Set all type/direction flags to false
         $scope.tclick = $scope.bclick = $scope.tscroll = $scope.bscroll = false;
         if(ctrl.type == 'click' && ctrl.direction == 'up') $scope.tclick = true;
@@ -66,20 +76,27 @@ var paginateController = function($scope,$element,$timeout){
 
         // Watches
         ctrl.$watchMany(['orderBy', 'query'], function(){
+            if(ctrl.initializing) return;
             // If either of these changes, all data must be pulled again
-            ctrl.items = [];
-            $scope.addResults();
+            $scope.noMore = false;
+            $scope.error = false;
+            _.remove(ctrl.items,true);
+            if(!$scope.loading) $scope.addResults();
         })
 
         // Default One-way bind values
-        if(_.isUndefined(ctrl.loadingMessage)) ctrl.loadingMessage = "Loading more items..."
-        if(_.isUndefined(ctrl.pageMessage)) ctrl.pageMessage = "Load more items"
-        if(_.isUndefined(ctrl.errorMessage)) ctrl.errorMessage = "There was a problem retreiving items."
+        if(_.isUndefined(ctrl.loadingMessage)) ctrl.loadingMessage = "Loading more items...";
+        if(_.isUndefined(ctrl.pageMessage)) ctrl.pageMessage = "Load more items";
+        if(_.isUndefined(ctrl.errorMessage)) ctrl.errorMessage = "There was a problem retreiving items.";
+        if(_.isUndefined(ctrl.noMoreMessage)) ctrl.noMoreMessage = "Thats it fam, sorry";
 
         // Initialize Scope Flags
         $scope.noMore = false;
         $scope.loading = false;
         $scope.error = false;
+
+        // Done initializing
+        ctrl.initializing = false;
     }
 
     ctrl.$onDestroy = function(){
@@ -125,14 +142,23 @@ angular.module('paginate.paginate',[])
 .component('paginate', {
     transclude: true,
     bindings: {
-        type : '@', // Type of pagination: click or scroll
-        direction : '@', // Direction of scrolling: up or down
+        // Optional Strings
         pageMessage: '@', // Clickable message for loading more data
         errorMessage : '@', // Error message
-        loadingMessage : '@',
+        loadingMessage : '@', // Loader message
+        noMoreMessage : '@', // No more results message
+
+        // Required Strings
+        type : '@', // Type of pagination: click or scroll
+        direction : '@', // Direction of scrolling: up or down
+
+        // Required Functions
         pageFunc : '&',
 
+        // Required Scope Vars
         items : '=', // The list of items
+
+        // Optional Scope Vars
         lastKey : '=', // Unique key of the last item
         orderBy : '=', // Ordering parameter
         query : '=', // Search keywords

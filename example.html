@@ -5,6 +5,12 @@
         <meta charset="utf-8">
         <title></title>
         <link rel="stylesheet" href="../paginate.css" media="screen" title="no title" charset="utf-8">
+        <style media="screen">
+        .item{
+          margin : 4px;
+          background-color:pink;
+        }
+        </style>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.13.1/lodash.js"></script>
         <script src="https://code.angularjs.org/1.5.5/angular.min.js"></script>
         <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
@@ -13,19 +19,13 @@
             angular.module("ctt",["paginate.paginate"]).controller('ct',function($scope, $http) {
                 $scope.paginator = {
                     'items' : [],
-                    'pageFunc' : newPage,
+                    'pageFunc' : function(){
+                        // Use query, orderBy, lastKey to get paginated data
+                        return $http.get('example.json')
+                    },
                     'orderBy' : 'name',
                     'query' : 'test',
                 };
-
-                newPage().success(function(r){
-                    $scope.paginator.items = r.concat($scope.paginator.items)
-                });
-
-                function newPage(){
-                    // Use query, orderBy, lastKey to get paginated data
-                    return $http.get('example.json')
-                }
             })
         </script>
     </head>
@@ -37,7 +37,7 @@
                 <span ng-click="paginate.orderBy = 'age'">Age</span>
             </div>
             <input type="text" ng-model="paginator.query" name="name" value="">
-            <paginate items="paginator.items" query="paginator.query" order-by="paginate.orderBy" type="scroll" direction="down" page-func="paginator.pageFunc()">
+            <paginate items="paginator.items" query="paginator.query" order-by="paginate.orderBy" type="click" direction="up" page-func="paginator.pageFunc()">
                 <div class="item" ng-repeat="item in paginator.items">
                     {{item.name}} : {{item.age}}
                 </div>
