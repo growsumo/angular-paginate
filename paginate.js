@@ -32,13 +32,11 @@ var paginateController = function($scope,$element,$timeout){
 
         // Add results to list
         ctrl.pageFunc().success(function(r){
-            console.log(r);
-            $scope.initialized = true;
-
             if(!_.isObject(r.rdata)) r.rdata = JSON.parse(r.rdata)
 
             // This has to be done on digest
             $timeout(function(){
+                $scope.initialized = true;
                 // Depending on direction, add items to front or back of items
                 if(ctrl.direction == 'up') ctrl.items = r.rdata.concat(ctrl.items);
                 else ctrl.items = ctrl.items.concat(r.rdata);
@@ -91,9 +89,6 @@ var paginateController = function($scope,$element,$timeout){
         //     _.remove(ctrl.items,true);
         //     if(!$scope.loadingPage && $scope.initialized) $scope.addResults();
         // });
-        ctrl.$watch('pageFunc.length',function(){
-            console.log('chan');
-        })
 
         // Default One-way bind values
         if(_.isUndefined(ctrl.loadingMessage)) ctrl.loadingMessage = "Loading more items...";
