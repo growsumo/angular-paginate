@@ -1,13 +1,14 @@
+<!-- Run 'python ' -->
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8">
         <title></title>
-        <link rel="stylesheet" href="paginate.css" media="screen" title="no title" charset="utf-8">
+        <link rel="stylesheet" href="../paginate.css" media="screen" title="no title" charset="utf-8">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.13.1/lodash.js"></script>
         <script src="https://code.angularjs.org/1.5.5/angular.min.js"></script>
         <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
-        <script src="paginate.js"></script>
+        <script src="https://cdn.rawgit.com/growsumo/angular-paginate/master/paginate.js"></script>
         <script type="text/javascript">
             angular.module("ctt",["paginate.paginate"]).controller('ct',function($scope, $http) {
                 $scope.paginator = {
@@ -23,7 +24,7 @@
 
                 function newPage(){
                     // Use query, orderBy, lastKey to get paginated data
-                    return $http.get('/testData.json')
+                    return $http.get('testData.json')
                 }
             })
         </script>
