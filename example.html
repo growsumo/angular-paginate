@@ -16,7 +16,7 @@
         <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
         <script src="paginate.js"></script>
         <script type="text/javascript">
-            angular.module("ctt",["paginate.paginate"]).controller('ct',function($scope, $http) {
+            angular.module("ctt",["paginate"]).controller('ct',function($scope, $http) {
                 $scope.paginator = {
                     'items' : [],
                     'pageFunc' : function(){
@@ -33,11 +33,11 @@
         <div ng-controller="ct">
             <div class="sort">
                 Sort by:
-                <span ng-click="paginate.orderBy = 'name'">Name</span>
-                <span ng-click="paginate.orderBy = 'age'">Age</span>
+                <span ng-click="paginator.orderBy = 'name'">Name</span>
+                <span ng-click="paginator.orderBy = 'age'">Age</span>
             </div>
             <input type="text" ng-model="paginator.query" name="name" value="">
-            <paginate items="paginator.items" query="paginator.query" order-by="paginate.orderBy" type="click" direction="up" page-func="paginator.pageFunc()">
+            <paginate items="paginator.items" query="paginator.query" order-by="paginator.orderBy" type="click" direction="up" page-func="paginator.pageFunc()">
                 <div class="item" ng-repeat="item in paginator.items">
                     {{item.name}} : {{item.age}}
                 </div>

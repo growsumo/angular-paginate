@@ -1,60 +1,69 @@
-Object.prototype.componentExtend = function(scope){
-    // Check for scope
-    if(_.isUndefined(scope)) throw("Object.prototype.componentExtend: scoep must be passed in as agrument");
-
-    this.$watch = function(prop,handler){
-        if(!_.isString(prop)) throw "Property must be a string path"
-        scope.$watch(angular.bind(this,function(){
-            return _.get(this, prop);
-        }), handler)
-    }
-
-    this.$watchMany = function(props,handler){
-        if(!_.isArray(props)) throw "Properties must be an array of string paths";
-        for(var i = 0; i < props.length; i ++) this.$watch(props[i],handler)
-    }
-}
-
 var paginateControllerDeps = ['$scope','$element','$timeout'];
 var paginateController = function($scope,$element,$timeout){
-    this.componentExtend($scope);
+    componentExtend = function(obj, scope){
+        // Check for scope
+        if(_.isUndefined(scope)) throw("Object.prototype.componentExtend: scoep must be passed in as agrument");
+
+        obj.$watch = function(prop,handler){
+            if(!_.isString(prop)) throw "Property must be a string path"
+            scope.$watch(angular.bind(obj,function(){
+                return _.get(obj, prop);
+            }), handler)
+        }
+
+        obj.$watchMany = function(props,handler){
+            if(!_.isArray(props)) throw "Properties must be an array of string paths";
+            for(var i = 0; i < props.length; i ++) obj.$watch(props[i],handler)
+        }
+    }
+
+    componentExtend(this,$scope)
     var ctrl = this;
 
     $scope.addResults = function(){
         // Show loader
-        $scope.loading = true;
+        $scope.loadingPage = true;
 
         // No Errors.. yet
-        $scope.error = false;
+        $scope.paginateError = false;
 
         // Get current scroll height
-        scroll.old = scroll.get();
+        scroll.old = scroll.height;
 
         // Add results to list
         ctrl.pageFunc().success(function(r){
-            // Depending on direction, add items to front or back of items
-            if(ctrl.direction == 'up') ctrl.items = r.concat(ctrl.items);
-            else ctrl.items = ctrl.items.concat(r);
+            console.log(r);
+            $scope.initialized = true;
 
-            if(Math.floor(Math.random()*10) == 5) $scope.noMore = true;
+            if(!_.isObject(r.rdata)) r.rdata = JSON.parse(r.rdata)
 
-            // Hide loader
-            $scope.loading = false;
+            // This has to be done on digest
+            $timeout(function(){
+                // Depending on direction, add items to front or back of items
+                if(ctrl.direction == 'up') ctrl.items = r.rdata.concat(ctrl.items);
+                else ctrl.items = ctrl.items.concat(r.rdata);
 
-            // Set the scrolling after digest
-            $timeout(scroll.set);
+                // Hide loader
+                $scope.loadingPage = false;
+
+                // Set the scrolling after digest
+                $timeout(scroll.set);
+            });
+
+            // Temporary page end
+            // if(Math.floor(Math.random()*10) == 5) $scope.noMore = true;
+
         }).error(function(r){
             // Error
-            $scope.error = true;
+            $scope.paginateError = true;
         });
     }
 
-    ctrl.initializing = false;
     ctrl.$onInit = function(){
-        ctrl.initializing = true;
-        // Check required params
-        if(_.isUndefined(ctrl.type)) throw("angular-paginate: type attribute required can be 'click' or 'scroll'");
-        if(_.isUndefined(ctrl.direction)) throw("angular-paginate: direction attribute required can be 'up' or 'down'");
+        $scope.initialized = false;
+        // Error Check required params
+        if(_.isUndefined(ctrl.type) && _.includes(['click','scroll'],ctrl.type)) throw("angular-paginate: type attribute required can be 'click' or 'scroll'");
+        if(_.isUndefined(ctrl.direction) && _.includes(['up','down'],ctrl.direction)) throw("angular-paginate: direction attribute required can be 'up' or 'down'");
         if(_.isUndefined(ctrl.items) && _.isArray(ctrl.items)) throw("angular-paginate: items attribute required, must be an array");
         if(_.isUndefined(ctrl.items) && _.isArray(ctrl.items)) throw("angular-paginate: items attribute required, must be an array");
 
@@ -75,13 +84,15 @@ var paginateController = function($scope,$element,$timeout){
         });
 
         // Watches
-        ctrl.$watchMany(['orderBy', 'query'], function(){
-            if(ctrl.initializing) return;
-            // If either of these changes, all data must be pulled again
-            $scope.noMore = false;
-            $scope.error = false;
-            _.remove(ctrl.items,true);
-            if(!$scope.loading) $scope.addResults();
+        // ctrl.$watchMany(['orderBy', 'query'], function(){
+        //     // If either of these changes, all data must be pulled again
+        //     $scope.noMore = false;
+        //     $scope.paginateError = false;
+        //     _.remove(ctrl.items,true);
+        //     if(!$scope.loadingPage && $scope.initialized) $scope.addResults();
+        // });
+        ctrl.$watch('pageFunc.length',function(){
+            console.log('chan');
         })
 
         // Default One-way bind values
@@ -92,16 +103,18 @@ var paginateController = function($scope,$element,$timeout){
 
         // Initialize Scope Flags
         $scope.noMore = false;
-        $scope.loading = false;
-        $scope.error = false;
+        $scope.loadingPage = false;
+        $scope.paginateError = false;
 
-        // Done initializing
-        ctrl.initializing = false;
-    }
+        scroll.element.style.overflowY = "scroll";
+        scroll.element.style.height = "100%";
+
+        if(!ctrl.items.length) $timeout($scope.addResults);
+    };
 
     ctrl.$onDestroy = function(){
         scroll.bind(true); // Unbind scroll
-    }
+    };
 
     var scroll = {
         old : 0, // Old scroll container height
@@ -109,15 +122,11 @@ var paginateController = function($scope,$element,$timeout){
             scroll.element.scrollTop = 0;
         },
         toBottom : function(){
-            scroll.element.scrollTop = scroll.element.scrollHeight;
-        },
-        get : function(){
-            return scroll.element.scrollHeight;
+            scroll.element.scrollTop = scroll.height;
         },
         set : function(){
             if(ctrl.direction == 'down') return;
-            var v = (scroll.get() - scroll.old);
-            scroll.element.scrollTop = v;
+            scroll.element.scrollTop = (scroll.height - scroll.old);
         },
         bind : function(justUnbind){
             angular.element(scroll.element).unbind('scroll');
@@ -129,16 +138,17 @@ var paginateController = function($scope,$element,$timeout){
                 if($scope.tscroll && !scroll.element.scrollTop) $timeout($scope.addResults);
 
                 // Direction is down and scroll has reached bottom
-                else if($scope.bscroll && scroll.element.scrollTop + $(scroll.element).innerHeight() >= scroll.element.scrollHeight) $timeout($scope.addResults);
+                else if($scope.bscroll && scroll.element.scrollTop + $(scroll.element).innerHeight() >= scroll.height) $timeout($scope.addResults);
             });
         }
     };
     Object.defineProperty(scroll, 'element', { get : function(){return $element[0].firstChild;}}) // Element is a dynamic property
+    Object.defineProperty(scroll, 'height', { get : function(){return scroll.element.scrollHeight;}}) // Element is a dynamic property
 };
 
 paginateController.$inject = paginateControllerDeps;
 
-angular.module('paginate.paginate',[])
+angular.module('paginate',[])
 .component('paginate', {
     transclude: true,
     bindings: {

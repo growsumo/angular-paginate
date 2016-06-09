@@ -1,4 +1,4 @@
-[
+{ "rdata" : [
   {
     "key": 0,
     "age": 40,
@@ -109,4 +109,4 @@
     "age": 27,
     "name": "Rice Gilbert"
   }
-]
+]}
