@@ -117,12 +117,6 @@ var paginateController = function($scope,$element,$timeout){
             // if(!$scope.loadingPage) $scope.addResults();
         });
 
-        // Load first items on ready
-        ctrl.$watch('config.ready', function(){
-            if(!ctrl.config.ready) return;
-            $timeout($scope.addResults);
-        });
-
         // Default One-way bind values
         if(_.isUndefined(ctrl.config.loadingMessage)) ctrl.config.loadingMessage = "Loading more items...";
         if(_.isUndefined(ctrl.config.pageMessage)) ctrl.config.pageMessage = "Load more items";
@@ -143,7 +137,6 @@ var paginateController = function($scope,$element,$timeout){
         $scope.noMore = false;
         $scope.loadingPage = false;
         $scope.paginateError = false;
-        ctrl.config.ready = false;
     }
 
     ctrl.$onDestroy = function(){
@@ -184,9 +177,7 @@ var paginateController = function($scope,$element,$timeout){
     ctrl.config.toTop = function(){ scroll.toTop(); };
     ctrl.config.reset = function(){
         $scope.reset();
-        $timeout(function(){
-            ctrl.config.ready = true;
-        });
+        $timeout($scope.addResults);
     }
 };
 
