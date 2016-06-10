@@ -1,17 +1,17 @@
 <div class="paginate-scroller" style="position:absolute; top:0;left:0;right:0;bottom:0">
     <div ng-show="(tclick || tscroll) && noMore">
-        No more fam.
+        {{$ctrl.config.noMoreMessage}}
     </div>
     <div ng-if="tclick && !noMore" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
-        {{$ctrl.pageMessage}}
-        <div class="paginate-loader" ng-show="loadingPage">Loading...</div>
+        {{$ctrl.config.pageMessage}}
+        <!-- <div class="paginate-loader" ng-show="loadingPage">{{$ctrl.config.loadingMessage}}</div> -->
     </div>
     <ng-transclude style="overflow:hidden;"></ng-transclude>
     <div ng-if="bclick && !noMore" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
-        {{$ctrl.pageMessage}}
-        <div class="paginate-loader" ng-show="loadingPage">Loading...</div>
+        {{$ctrl.config.pageMessage}}
+        <!-- <div class="paginate-loader" ng-show="loadingPage">{{$ctrl.config.loadingMessage}}</div> -->
     </div>
     <div ng-show="(bclick || bscroll) && noMore">
-        {{$ctrl.noMoreMessage}}
+        {{$ctrl.config.noMoreMessage}}
     </div>
 </div>
