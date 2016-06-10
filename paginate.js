@@ -36,16 +36,17 @@ var paginateController = function($scope,$element,$timeout){
 
             // This has to be done on digest
             $timeout(function(){
-                $scope.initialized = true;
-                // Depending on direction, add items to front or back of items
-                if(ctrl.direction == 'up') ctrl.items = r.rdata.concat(ctrl.items);
-                else ctrl.items = ctrl.items.concat(r.rdata);
+                $scope.$apply(function(){
+                    // Depending on direction, add items to front or back of items
+                    if(ctrl.direction == 'up') ctrl.items = r.rdata.concat(ctrl.items);
+                    else ctrl.items = ctrl.items.concat(r.rdata);
 
-                // Hide loader
-                $scope.loadingPage = false;
+                    // Hide loader
+                    $scope.loadingPage = false;
 
-                // Set the scrolling after digest
-                $timeout(scroll.set);
+                    // Set the scrolling after digest
+                    $timeout(scroll.set);
+                });
             });
 
             // Temporary page end
@@ -90,6 +91,11 @@ var paginateController = function($scope,$element,$timeout){
         //     if(!$scope.loadingPage && $scope.initialized) $scope.addResults();
         // });
 
+        ctrl.$watch('ready', function(){
+            if(!ctrl.ready) return;
+            $timeout($scope.addResults);
+        });
+
         // Default One-way bind values
         if(_.isUndefined(ctrl.loadingMessage)) ctrl.loadingMessage = "Loading more items...";
         if(_.isUndefined(ctrl.pageMessage)) ctrl.pageMessage = "Load more items";
@@ -103,8 +109,6 @@ var paginateController = function($scope,$element,$timeout){
 
         scroll.element.style.overflowY = "scroll";
         scroll.element.style.height = "100%";
-
-        if(!ctrl.items.length) $timeout($scope.addResults);
     };
 
     ctrl.$onDestroy = function(){
@@ -162,6 +166,7 @@ angular.module('paginate',[])
 
         // Required Scope Vars
         items : '=', // The list of items
+        ready : '=',
 
         // Optional Scope Vars
         lastKey : '=', // Unique key of the last item
