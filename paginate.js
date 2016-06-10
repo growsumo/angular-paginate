@@ -1,5 +1,5 @@
-var paginateControllerDeps = ['$scope','$element','$timeout'];
-var paginateController = function($scope,$element,$timeout){
+var paginateControllerDeps = ['$scope','$element','$timeout','$rootScope'];
+var paginateController = function($scope,$element,$timeout,$rootScope){
     componentExtend = function(obj, scope){
         // Check for scope
         if(_.isUndefined(scope)) throw("Object.prototype.componentExtend: scoep must be passed in as agrument");
@@ -20,6 +20,22 @@ var paginateController = function($scope,$element,$timeout){
     componentExtend(this,$scope)
     var ctrl = this;
 
+    $scope.$on("paginate",function(e,d){
+        if(d.id !== ctrl.config.id) return;
+        // Execute method
+        switch(d.method){
+            case 'bottom':
+                $timeout(scroll.toBottom);
+                break;
+            case 'top':
+                $timeout(scroll.toTop);
+                break;
+            case 'forcePage':
+                $scope.addResults();
+                break;
+        }
+    });
+
     $scope.addResults = function(){
         // Show loader
         $scope.loadingPage = true;
@@ -38,8 +54,8 @@ var paginateController = function($scope,$element,$timeout){
             $timeout(function(){
                 $scope.$apply(function(){
                     // Depending on direction, add items to front or back of items
-                    if(ctrl.direction == 'up') ctrl.items = r.rdata.concat(ctrl.items);
-                    else ctrl.items = ctrl.items.concat(r.rdata);
+                    if(ctrl.direction == 'up') ctrl.config.items = r.rdata.concat(ctrl.config.items);
+                    else ctrl.config.items = ctrl.config.items.concat(r.rdata);
 
                     // Hide loader
                     $scope.loadingPage = false;
@@ -63,8 +79,8 @@ var paginateController = function($scope,$element,$timeout){
         // Error Check required params
         if(_.isUndefined(ctrl.type) && _.includes(['click','scroll'],ctrl.type)) throw("angular-paginate: type attribute required can be 'click' or 'scroll'");
         if(_.isUndefined(ctrl.direction) && _.includes(['up','down'],ctrl.direction)) throw("angular-paginate: direction attribute required can be 'up' or 'down'");
-        if(_.isUndefined(ctrl.items) && _.isArray(ctrl.items)) throw("angular-paginate: items attribute required, must be an array");
-        if(_.isUndefined(ctrl.items) && _.isArray(ctrl.items)) throw("angular-paginate: items attribute required, must be an array");
+        if(_.isUndefined(ctrl.config.items) && _.isArray(ctrl.config.items)) throw("angular-paginate: items attribute required, must be an array");
+        if(_.isUndefined(ctrl.config.items) && _.isArray(ctrl.config.items)) throw("angular-paginate: items attribute required, must be an array");
 
         // Set all type/direction flags to false
         $scope.tclick = $scope.bclick = $scope.tscroll = $scope.bscroll = false;
@@ -83,24 +99,24 @@ var paginateController = function($scope,$element,$timeout){
         });
 
         // Watches
-        // ctrl.$watchMany(['orderBy', 'query'], function(){
-        //     // If either of these changes, all data must be pulled again
-        //     $scope.noMore = false;
-        //     $scope.paginateError = false;
-        //     _.remove(ctrl.items,true);
-        //     if(!$scope.loadingPage && $scope.initialized) $scope.addResults();
-        // });
+        ctrl.$watchMany(['config.orderBy', 'config.query'], function(){
+            // If either of these changes, all data must be pulled again
+            $scope.noMore = false;
+            $scope.paginateError = false;
+            _.remove(ctrl.config.items,true);
+            if(!$scope.loadingPage && $scope.initialized) $scope.addResults();
+        });
 
-        ctrl.$watch('ready', function(){
-            if(!ctrl.ready) return;
+        ctrl.$watch('config.ready', function(){
+            if(!ctrl.config.ready) return;
             $timeout($scope.addResults);
         });
 
         // Default One-way bind values
-        if(_.isUndefined(ctrl.loadingMessage)) ctrl.loadingMessage = "Loading more items...";
-        if(_.isUndefined(ctrl.pageMessage)) ctrl.pageMessage = "Load more items";
-        if(_.isUndefined(ctrl.errorMessage)) ctrl.errorMessage = "There was a problem retreiving items.";
-        if(_.isUndefined(ctrl.noMoreMessage)) ctrl.noMoreMessage = "Thats it fam, sorry";
+        if(_.isUndefined(ctrl.config.loadingMessage)) ctrl.config.loadingMessage = "Loading more items...";
+        if(_.isUndefined(ctrl.config.pageMessage)) ctrl.config.pageMessage = "Load more items";
+        if(_.isUndefined(ctrl.config.errorMessage)) ctrl.config.errorMessage = "There was a problem retreiving items.";
+        if(_.isUndefined(ctrl.config.noMoreMessage)) ctrl.config.noMoreMessage = "Thats it fam, sorry";
 
         // Initialize Scope Flags
         $scope.noMore = false;
@@ -121,7 +137,7 @@ var paginateController = function($scope,$element,$timeout){
             scroll.element.scrollTop = 0;
         },
         toBottom : function(){
-            scroll.element.scrollTop = scroll.height;
+            scroll.element.scrollTop = 1000000;
         },
         set : function(){
             if(ctrl.direction == 'down') return;
@@ -143,6 +159,10 @@ var paginateController = function($scope,$element,$timeout){
     };
     Object.defineProperty(scroll, 'element', { get : function(){return $element[0].firstChild;}}) // Element is a dynamic property
     Object.defineProperty(scroll, 'height', { get : function(){return scroll.element.scrollHeight;}}) // Element is a dynamic property
+
+    // Externally accessible Functions
+    ctrl.config.toBottom = function(){ scroll.toBottom(); };
+    ctrl.config.toTop = function(){ scroll.toTop(); };
 };
 
 paginateController.$inject = paginateControllerDeps;
@@ -151,11 +171,12 @@ angular.module('paginate',[])
 .component('paginate', {
     transclude: true,
     bindings: {
+        config : '=',
         // Optional Strings
-        pageMessage: '@', // Clickable message for loading more data
-        errorMessage : '@', // Error message
-        loadingMessage : '@', // Loader message
-        noMoreMessage : '@', // No more results message
+        // pageMessage: '@', // Clickable message for loading more data
+        // errorMessage : '@', // Error message
+        // loadingMessage : '@', // Loader message
+        // noMoreMessage : '@', // No more results message
 
         // Required Strings
         type : '@', // Type of pagination: click or scroll
@@ -165,13 +186,13 @@ angular.module('paginate',[])
         pageFunc : '&',
 
         // Required Scope Vars
-        items : '=', // The list of items
-        ready : '=',
+        // items : '=', // The list of items
+        // ready : '=',
 
         // Optional Scope Vars
-        lastKey : '=', // Unique key of the last item
-        orderBy : '=', // Ordering parameter
-        query : '=', // Search keywords
+        // lastKey : '=', // Unique key of the last item
+        // orderBy : '=', // Ordering parameter
+        // query : '=', // Search keywords
     },
     templateUrl: 'paginateTemplate.html',
     controller : paginateController
