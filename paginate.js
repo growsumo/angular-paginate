@@ -1,5 +1,5 @@
-var paginateControllerDeps = ['$scope','$element','$timeout','$rootScope'];
-var paginateController = function($scope,$element,$timeout,$rootScope){
+var paginateControllerDeps = ['$scope','$element','$timeout'];
+var paginateController = function($scope,$element,$timeout){
     componentExtend = function(obj, scope){
         // Check for scope
         if(_.isUndefined(scope)) throw("Object.prototype.componentExtend: scoep must be passed in as agrument");
