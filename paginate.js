@@ -33,6 +33,9 @@ var paginateController = function($scope,$element,$timeout){
             case 'forcePage':
                 $scope.addResults();
                 break;
+            case 'reset':
+                $scope.reset();
+                break;
         }
     });
 
@@ -176,6 +179,7 @@ var paginateController = function($scope,$element,$timeout){
     ctrl.config.toBottom = function(){ scroll.toBottom(); };
     ctrl.config.toTop = function(){ scroll.toTop(); };
     ctrl.config.reset = function(){
+        ctrl.config.items = [];
         $scope.reset();
         $timeout($scope.addResults);
     }
