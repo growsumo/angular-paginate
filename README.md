@@ -44,7 +44,7 @@ a promise object that is resolved inside the component. Here is an example:
 This function is very important because it fetches the data that is being paginated. You never have to call this function as
 it is called automatically by the component.
 
-#### Tell paginate to do stuff
+#### Give It Orders
 
 Because we named the instance of angular-paginate, we have the ability to send it commands from other places like far away controllers. We accomplish this using events.
 
