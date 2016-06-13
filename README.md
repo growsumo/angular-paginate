@@ -6,7 +6,7 @@ Flexible pagination component for Angular applications.
 
 For this component to function properly, implementations should follow this procedure closely.
 
-### JS
+### JavaScript
 
 The angular implementation for this component is simple. Declare the paginate config object to set things up
 
