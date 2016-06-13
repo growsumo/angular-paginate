@@ -18,7 +18,7 @@ The angular implementation for this component is simple. Declare the paginate co
         }, // A function for getting more results based on $scope.paginate.lastKey, $scope.paginate.orderBy, $scope.paginate.query
     }
 
-#### Options
+##### Options
 
 There are a number of optional paginate configuration settings:
 
@@ -32,7 +32,7 @@ There are a number of optional paginate configuration settings:
 
     orderBy        -> This is the property used for sorting, Angular-paginate will fetch new results when this changes
 
-#### Page Function
+##### Page Function
 
 The most important piece in the implementation of this component is the page function or 'pageFunc'. This function must return
 a promise object that is resolved inside the component. Here is an example:
@@ -44,7 +44,7 @@ a promise object that is resolved inside the component. Here is an example:
 This function is very important because it fetches the data that is being paginated. You never have to call this function as
 it is called automatically by the component.
 
-#### Give It Orders
+##### Give It Orders
 
 Because we named the instance of angular-paginate, we have the ability to send it commands from other places like far away controllers. We accomplish this using events.
 
@@ -59,7 +59,7 @@ Make sure to include the 'id' and 'method' properties in the event data. Current
 - **forcePage** : force the addition of another page
 - **reset** :  reset the contents and state of the paginate instance
 
-#### Finishing up
+##### Finishing up
 
 When everything is set up in your controller, call `$scope.paginate.reset();` to initialize the component. This can also
 be called whenever you want to force a reload of the data. In messages this is used whenever a different room is selected.
