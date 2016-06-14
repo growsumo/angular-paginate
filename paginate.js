@@ -112,12 +112,14 @@ var paginateController = function($scope,$element,$timeout){
         });
 
         // Watches
+        // TODO : Prevent this from double calling on init
         ctrl.$watchMany(['config.orderBy', 'config.query'], function(){
             // If either of these changes, all data must be pulled again
             $scope.noMore = false;
             $scope.paginateError = false;
-            _.remove(ctrl.config.items,true);
-            // if(!$scope.loadingPage) $scope.addResults();
+            ctrl.config.items = [];
+            ctrl.config.lastKey = '';
+            $scope.addResults();
         });
 
         // Default One-way bind values
