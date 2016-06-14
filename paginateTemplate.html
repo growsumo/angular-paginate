@@ -1,17 +1,27 @@
-<div class="paginate-scroller" style="position:absolute; top:0;left:0;right:0;bottom:0">
-    <div ng-show="(tclick || tscroll) && noMore">
+<div class="paginate-scroller">
+    <div class="paginate-nomore" ng-show="(tclick || tscroll) && noMore">
         {{$ctrl.config.noMoreMessage}}
     </div>
-    <div ng-if="tclick && !noMore" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
+    <div ng-show="!loadingPage" class="paginate-more" ng-if="tclick && !noMore" ng-click="addResults()">
         {{$ctrl.config.pageMessage}}
-        <!-- <div class="paginate-loader" ng-show="loadingPage">{{$ctrl.config.loadingMessage}}</div> -->
     </div>
+    <div ng-show="loadingPage" class="paginate-loader" ng-if="tclick" ng-show="loadingPage">
+        {{$ctrl.config.loadingMessage}}
+        <i class="fa fa-cog fa-spin" aria-hidden="true"></i>
+    </div>
+    
+    <!-- This is important!!! -->
     <ng-transclude style="overflow:hidden;"></ng-transclude>
-    <div ng-if="bclick && !noMore" style="background-color: gray;text-align:center; margin:10px; cursor:pointer;" ng-click="addResults()">
+    <!-- End importance -->
+
+    <div ng-show="!loadingPage" class="paginate-more" ng-if="bclick && !noMore" ng-click="addResults()">
         {{$ctrl.config.pageMessage}}
-        <!-- <div class="paginate-loader" ng-show="loadingPage">{{$ctrl.config.loadingMessage}}</div> -->
     </div>
-    <div ng-show="(bclick || bscroll) && noMore">
+    <div ng-show="loadingPage" class="paginate-loader" ng-if="bclick" ng-show="loadingPage">
+        {{$ctrl.config.loadingMessage}}
+        <i class="fa fa-cog fa-spin" aria-hidden="true"></i>
+    </div>
+    <div class="paginate-nomore" ng-show="(bclick || bscroll) && noMore">
         {{$ctrl.config.noMoreMessage}}
     </div>
 </div>

@@ -1,8 +1,12 @@
 var paginateControllerDeps = ['$scope','$element','$timeout'];
 var paginateController = function($scope,$element,$timeout){
+
+    var ready = false;
+
+    // These are seperate because they will likely be implemented in a more global setting
     componentExtend = function(obj, scope){
         // Check for scope
-        if(_.isUndefined(scope)) throw("Object.prototype.componentExtend: scoep must be passed in as agrument");
+        if(_.isUndefined(scope)) throw("Object.prototype.componentExtend: scope must be passed in as agrument");
 
         obj.$watch = function(prop,handler){
             if(!_.isString(prop)) throw "Property must be a string path"
@@ -20,6 +24,7 @@ var paginateController = function($scope,$element,$timeout){
     componentExtend(this,$scope)
     var ctrl = this;
 
+    // Event Listeners
     $scope.$on("paginate",function(e,d){
         if(d.id !== ctrl.config.id) return;
         // Execute method
@@ -112,21 +117,19 @@ var paginateController = function($scope,$element,$timeout){
         });
 
         // Watches
-        // TODO : Prevent this from double calling on init
         ctrl.$watchMany(['config.orderBy', 'config.query'], function(){
+            if(!ready) return;
             // If either of these changes, all data must be pulled again
-            $scope.noMore = false;
-            $scope.paginateError = false;
             ctrl.config.items = [];
-            ctrl.config.lastKey = '';
+            $scope.reset();
             $scope.addResults();
         });
 
         // Default One-way bind values
-        if(_.isUndefined(ctrl.config.loadingMessage)) ctrl.config.loadingMessage = "Loading more items...";
-        if(_.isUndefined(ctrl.config.pageMessage)) ctrl.config.pageMessage = "Load more items";
+        if(_.isUndefined(ctrl.config.loadingMessage)) ctrl.config.loadingMessage = "Loading items";
+        if(_.isUndefined(ctrl.config.pageMessage)) ctrl.config.pageMessage = "Load more";
         if(_.isUndefined(ctrl.config.errorMessage)) ctrl.config.errorMessage = "There was a problem retreiving items.";
-        if(_.isUndefined(ctrl.config.noMoreMessage)) ctrl.config.noMoreMessage = "Thats it fam, sorry";
+        if(_.isUndefined(ctrl.config.noMoreMessage)) ctrl.config.noMoreMessage = "No more items to display";
 
         $scope.reset();
 
@@ -174,16 +177,18 @@ var paginateController = function($scope,$element,$timeout){
             });
         }
     };
+
     Object.defineProperty(scroll, 'element', { get : function(){return $element[0].firstChild;}}) // Element is a dynamic property
     Object.defineProperty(scroll, 'height', { get : function(){return scroll.element.scrollHeight;}}) // Element is a dynamic property
 
     // Externally accessible Functions
-    ctrl.config.toBottom = function(){ scroll.toBottom(); };
-    ctrl.config.toTop = function(){ scroll.toTop(); };
+    ctrl.config.toBottom = function(){ scroll.toBottom(); }; // must stay anonymously wrapped
+    ctrl.config.toTop = function(){ scroll.toTop(); }; // must stay anonymously wrapped
     ctrl.config.reset = function(){
         ctrl.config.items = [];
         $scope.reset();
         $timeout($scope.addResults);
+        ready = true;
     }
 };
 
