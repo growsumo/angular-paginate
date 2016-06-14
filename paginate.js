@@ -36,6 +36,7 @@ var paginateController = function($scope,$element,$timeout){
                 $timeout(scroll.toTop);
                 break;
             case 'forcePage':
+                console.log('for')
                 $scope.addResults();
                 break;
             case 'reset':
@@ -65,6 +66,7 @@ var paginateController = function($scope,$element,$timeout){
             // Are there still more results?
             if(!r.rdata.length){
                 $scope.noMore = true;
+                $scope.loadingPage = false;
                 return;
             }
 
@@ -118,7 +120,9 @@ var paginateController = function($scope,$element,$timeout){
 
         // Watches
         ctrl.$watchMany(['config.orderBy', 'config.query'], function(){
-            if(!ready) return;
+            // Dont listen for changes until data has initialized
+            if(!ready || !ctrl.config.items.length) return;
+
             // If either of these changes, all data must be pulled again
             ctrl.config.items = [];
             $scope.reset();
@@ -153,19 +157,29 @@ var paginateController = function($scope,$element,$timeout){
 
     var scroll = {
         old : 0, // Old scroll container height
+        artificial : false,
         toTop : function(){
+            scroll.artificial = true;
             scroll.element.scrollTop = 0;
         },
         toBottom : function(){
+            scroll.artificial = true;
             scroll.element.scrollTop = 1000000;
         },
         set : function(){
             if(ctrl.direction == 'down') return;
+            scroll.artificial = true;
             scroll.element.scrollTop = (scroll.height - scroll.old);
         },
         bind : function(justUnbind){
             angular.element(scroll.element).unbind('scroll');
             if(_.isUndefined(justUnbind)) angular.element(scroll.element).bind('scroll', function(e){
+                // Dont trigger on artificial scrolls
+                if(scroll.artificial){
+                    scroll.artificial = false;
+                    return;
+                }
+
                 // If there are no more results, dont do anything!
                 if($scope.noMore) return;
 
@@ -185,6 +199,7 @@ var paginateController = function($scope,$element,$timeout){
     ctrl.config.toBottom = function(){ scroll.toBottom(); }; // must stay anonymously wrapped
     ctrl.config.toTop = function(){ scroll.toTop(); }; // must stay anonymously wrapped
     ctrl.config.reset = function(){
+        scroll.artificial = true;
         ctrl.config.items = [];
         $scope.reset();
         $timeout($scope.addResults);
