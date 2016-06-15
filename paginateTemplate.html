@@ -1,27 +1,24 @@
 <div class="paginate-scroller">
-    <div class="paginate-nomore" ng-show="(tclick || tscroll) && noMore">
-        {{$ctrl.config.noMoreMessage}}
-    </div>
-    <div ng-show="!loadingPage" class="paginate-more" ng-if="tclick && !noMore" ng-click="addResults()">
-        {{$ctrl.config.pageMessage}}
-    </div>
-    <div ng-show="loadingPage" class="paginate-loader" ng-if="tclick" ng-show="loadingPage">
-        {{$ctrl.config.loadingMessage}}
-        <i class="fa fa-cog fa-spin" aria-hidden="true"></i>
-    </div>
-    
     <!-- This is important!!! -->
-    <ng-transclude style="overflow:hidden;"></ng-transclude>
+    <ng-transclude ng-if="bclick || bscroll" style="overflow:hidden;"></ng-transclude>
     <!-- End importance -->
 
-    <div ng-show="!loadingPage" class="paginate-more" ng-if="bclick && !noMore" ng-click="addResults()">
-        {{$ctrl.config.pageMessage}}
+    <div ng-show="!noMore && !loadingPage" class="paginate-more" ng-if="bclick || tclick" ng-click="addResults()">
+        {{$ctrl.config.pageMessage}} <i class="fa fa-plus" aria-hidden="true"></i>
     </div>
-    <div ng-show="loadingPage" class="paginate-loader" ng-if="bclick" ng-show="loadingPage">
-        {{$ctrl.config.loadingMessage}}
-        <i class="fa fa-cog fa-spin" aria-hidden="true"></i>
+    
+    <div ng-show="loadingPage" class="paginate-loader">
+        {{$ctrl.config.loadingMessage}} <i class="fa fa-cog fa-spin" aria-hidden="true"></i>
     </div>
-    <div class="paginate-nomore" ng-show="(bclick || bscroll) && noMore">
+
+    <!-- Dummy div to reduce jitter -->
+    <div ng-show="!noMore && !loadingPage && (bscroll || tscroll)" class="paginate-loader" style="color:transparent;opacity:0.01">Dummy text to stop flicker</div>
+
+    <div ng-show="noMore" class="paginate-nomore">
         {{$ctrl.config.noMoreMessage}}
     </div>
+
+    <!-- This is important!!! -->
+    <ng-transclude ng-if="tclick || tscroll" style="overflow:hidden;"></ng-transclude>
+    <!-- End importance -->
 </div>
