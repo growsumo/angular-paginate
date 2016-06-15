@@ -1,7 +1,8 @@
 var paginateControllerDeps = ['$scope','$element','$timeout'];
 var paginateController = function($scope,$element,$timeout){
 
-    var ready = false;
+    var ready = false; // Component is ready
+    var prevSearch; // Saves previous search - important in keeping tabs on state
 
     // These are seperate because they will likely be implemented in a more global setting
     componentExtend = function(obj, scope){
@@ -70,6 +71,8 @@ var paginateController = function($scope,$element,$timeout){
                 return;
             }
 
+            if(r.adata) $scope.noMore = true;
+
             // Set last key
             ctrl.config.lastKey = _.last(r.rdata).key;
 
@@ -121,7 +124,8 @@ var paginateController = function($scope,$element,$timeout){
         // Watches
         ctrl.$watchMany(['config.orderBy', 'config.query'], function(){
             // Dont listen for changes until data has initialized
-            if(!ready || !ctrl.config.items.length) return;
+            if((!ready || !ctrl.config.items.length) && ctrl.config.query === '' && _.isUndefined(prevSearch)) return;
+            prevSearch = ctrl.config.query;
 
             // If either of these changes, all data must be pulled again
             ctrl.config.items = [];
