@@ -37,7 +37,6 @@ var paginateController = function($scope,$element,$timeout){
                 $timeout(scroll.toTop);
                 break;
             case 'forcePage':
-                console.log('for')
                 $scope.addResults();
                 break;
             case 'reset':
