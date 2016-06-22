@@ -10,14 +10,14 @@ var paginateController = function($scope,$element,$timeout){
         if(_.isUndefined(scope)) throw("Object.prototype.componentExtend: scope must be passed in as agrument");
 
         obj.$watch = function(prop,handler){
-            if(!_.isString(prop)) throw "Property must be a string path"
+            if(!_.isString(prop)) throw("Property must be a string path");
             scope.$watch(angular.bind(obj,function(){
                 return _.get(obj, prop);
             }), handler)
         }
 
         obj.$watchMany = function(props,handler){
-            if(!_.isArray(props)) throw "Properties must be an array of string paths";
+            if(!_.isArray(props)) throw("Properties must be an array of string paths");
             for(var i = 0; i < props.length; i ++) obj.$watch(props[i],handler)
         }
     }
@@ -56,48 +56,59 @@ var paginateController = function($scope,$element,$timeout){
         scroll.old = scroll.height;
 
         // Add results to list
-        ctrl.pageFunc().success(function(r){
-            // Parse JSON if necessary
-            if(!_.isObject(r.rdata)) r.rdata = JSON.parse(r.rdata)
+        try{
+            ctrl.pageFunc().success(function(r){
+                // Parse JSON if necessary
+                if(!_.isObject(r.rdata)) r.rdata = JSON.parse(r.rdata)
 
-            // Check if response data is an array
-            if(!_.isArray(r.rdata)) throw(r);
+                // Check if response data is an array
+                if(!_.isArray(r.rdata)) throw(r);
 
-            // Are there still more results?
-            if(!r.rdata.length){
-                $scope.noMore = true;
-                $scope.loadingPage = false;
-                return;
-            }
-
-            if(r.adata) $scope.noMore = true;
-
-            // Set last key
-            ctrl.config.lastKey = _.last(r.rdata).key;
-
-            // This has to be done on digest
-            $timeout(function(){
-                $scope.$apply(function(){
-                    // Depending on direction, add items to front or back of items
-                    if(ctrl.direction == 'up'){
-                        ctrl.config.items = r.rdata.concat(ctrl.config.items);
-                    }else{
-                        ctrl.config.items = ctrl.config.items.concat(r.rdata);
-                    }
-                    // Hide loader
+                // Are there still more results?
+                // TODO: format adata, dont show on first pull
+                if(!r.rdata.length){
+                    $scope.noMore = true;
                     $scope.loadingPage = false;
+                    return;
+                }
 
-                    // Set the scrolling after digest
-                    $timeout(scroll.set);
+                if(r.adata) $scope.noMore = true;
+
+                // Set last key
+                ctrl.config.lastKey = _.last(r.rdata).key;
+
+                // This has to be done on digest
+                $timeout(function(){
+                    $scope.$apply(function(){
+                        // Depending on direction, add items to front or back of items
+                        if(ctrl.direction == 'up'){
+                            ctrl.config.items = r.rdata.concat(ctrl.config.items);
+                        }else{
+                            ctrl.config.items = ctrl.config.items.concat(r.rdata);
+                        }
+                        // Hide loader
+                        $scope.loadingPage = false;
+
+                        // Set the scrolling after digest
+                        $timeout(scroll.set);
+
+                        // ready
+                        ready = true;
+                    });
                 });
+            }).error(function(r){
+                // Error
+                $scope.paginateError = true;
             });
-        }).error(function(r){
-            // Error
-            $scope.paginateError = true;
-        });
+        } catch(e){
+            throw("angular-paginate: pageFunc has non-promise type return.")
+        }
     }
 
     ctrl.$onInit = function(){
+        // No key on init
+        ctrl.config.lastKey = '';
+
         // Error Check required params
         if(_.isUndefined(ctrl.type) && _.includes(['click','scroll'],ctrl.type)) throw("angular-paginate: type attribute required can be 'click' or 'scroll'");
         if(_.isUndefined(ctrl.direction) && _.includes(['up','down'],ctrl.direction)) throw("angular-paginate: direction attribute required can be 'up' or 'down'");
@@ -123,7 +134,9 @@ var paginateController = function($scope,$element,$timeout){
         // Watches
         ctrl.$watchMany(['config.orderBy', 'config.query'], function(){
             // Dont listen for changes until data has initialized
-            if((!ready || !ctrl.config.items.length) && ctrl.config.query === '' && _.isUndefined(prevSearch)) return;
+            if(!ready && ctrl.config.query === '' && _.isUndefined(prevSearch)) return;
+
+            // Save previous search
             prevSearch = ctrl.config.query;
 
             // If either of these changes, all data must be pulled again
@@ -206,7 +219,6 @@ var paginateController = function($scope,$element,$timeout){
         ctrl.config.items = [];
         $scope.reset();
         $timeout($scope.addResults);
-        ready = true;
     }
 };
 
