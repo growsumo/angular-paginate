@@ -6,15 +6,15 @@
     <div ng-show="!noMore && !loadingPage" class="paginate-more" ng-if="bclick || tclick" ng-click="addResults()">
         {{$ctrl.config.pageMessage}} <i class="fa fa-plus" aria-hidden="true"></i>
     </div>
-    
+
     <div ng-show="loadingPage" class="paginate-loader">
         {{$ctrl.config.loadingMessage}} <i class="fa fa-cog fa-spin" aria-hidden="true"></i>
     </div>
 
     <!-- Dummy div to reduce jitter -->
-    <div ng-show="!noMore && !loadingPage && (bscroll || tscroll)" class="paginate-loader" style="color:transparent;opacity:0.01">Dummy text to stop flicker</div>
+    <!-- <div ng-show="( !noMore && !loadingPage && (bscroll || tscroll) ) || !on_first_page" class="paginate-loader" style="color:transparent;opacity:0.01">Dummy text to stop flicker</div> -->
 
-    <div ng-show="noMore" class="paginate-nomore">
+    <div ng-show="noMore && !on_first_page" class="paginate-nomore">
         {{$ctrl.config.noMoreMessage}}
     </div>
 

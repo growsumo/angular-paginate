@@ -79,6 +79,9 @@ var paginateController = function($scope,$element,$timeout){
 
                 // This has to be done on digest
                 $timeout(function(){
+                    // First page has been pulled already and there is data, start showing no more items messaged banner
+                    if($scope.on_first_page && ctrl.config.items.length !== 0) $scope.on_first_page = false;
+
                     $scope.$apply(function(){
                         // Depending on direction, add items to front or back of items
                         if(ctrl.direction == 'up'){
@@ -109,6 +112,9 @@ var paginateController = function($scope,$element,$timeout){
         // No key on init
         ctrl.config.lastKey = '';
 
+        // Has first page been pulled?
+        $scope.on_first_page = true;
+
         // Error Check required params
         if(_.isUndefined(ctrl.type) && _.includes(['click','scroll'],ctrl.type)) throw("angular-paginate: type attribute required can be 'click' or 'scroll'");
         if(_.isUndefined(ctrl.direction) && _.includes(['up','down'],ctrl.direction)) throw("angular-paginate: direction attribute required can be 'up' or 'down'");
@@ -134,7 +140,9 @@ var paginateController = function($scope,$element,$timeout){
         // Watches
         ctrl.$watchMany(['config.orderBy', 'config.query'], function(){
             // Dont listen for changes until data has initialized
-            if(!ready && ctrl.config.query === '' && _.isUndefined(prevSearch)) return;
+
+            // Dont add results if not ready or query is being initialized
+            if(!ready || (ctrl.config.query === '' && _.isUndefined(prevSearch))) return;
 
             // Save previous search
             prevSearch = ctrl.config.query;
@@ -165,6 +173,7 @@ var paginateController = function($scope,$element,$timeout){
         $scope.noMore = false;
         $scope.loadingPage = false;
         $scope.paginateError = false;
+        $scope.on_first_page = true;
     }
 
     ctrl.$onDestroy = function(){
