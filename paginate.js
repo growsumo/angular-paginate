@@ -138,11 +138,10 @@ var paginateController = function($scope,$element,$timeout){
         });
 
         // Watches
-        ctrl.$watchMany(['config.orderBy', 'config.query'], function(){
+        ctrl.$watchMany(['config.orderBy', 'config.query'], function(pre,post){
             // Dont listen for changes until data has initialized
-
             // Dont add results if not ready or query is being initialized
-            if(!ready || (ctrl.config.query === '' && _.isUndefined(prevSearch))) return;
+            if(!ready || ((ctrl.config.query === '' && _.isUndefined(prevSearch)) && pre == post)) return;
 
             // Save previous search
             prevSearch = ctrl.config.query;
@@ -150,6 +149,11 @@ var paginateController = function($scope,$element,$timeout){
             // If either of these changes, all data must be pulled again
             ctrl.config.items = [];
             $scope.reset();
+
+            // If there is a query, show the no more results block
+            if(ctrl.config.query !== '') $scope.on_first_page = false;
+
+            // Re-pull
             $scope.addResults();
         });
 
