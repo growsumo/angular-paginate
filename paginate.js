@@ -209,10 +209,10 @@ var paginateController = function($scope,$element,$timeout){
                 if($scope.noMore) return;
 
                 // Direction is up and scroll has reached top
-                if($scope.tscroll && !scroll.element.scrollTop) $timeout($scope.addResults);
+                if($scope.tscroll && !scroll.element.scrollTop) $scope.$evalAsync($scope.addResults);
 
                 // Direction is down and scroll has reached bottom
-                else if($scope.bscroll && scroll.element.scrollTop + $(scroll.element).innerHeight() >= scroll.height) $timeout($scope.addResults);
+                else if($scope.bscroll && scroll.element.scrollTop + $(scroll.element).innerHeight() >= scroll.height) $scope.$evalAsync($scope.addResults);
             });
         }
     };
