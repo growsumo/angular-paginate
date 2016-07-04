@@ -1,8 +1,13 @@
 var paginateControllerDeps = ['$scope','$element','$timeout'];
 var paginateController = function($scope,$element,$timeout){
 
-    var ready = false; // Component is ready
     var prevSearch; // Saves previous search - important in keeping tabs on state
+    var init = {
+        readyToInit : false,
+        initialized : false,
+        initializing : false,
+    };
+    $scope.ready = false; // Component is ready
 
     // These are seperate because they will likely be implemented in a more global setting
     componentExtend = function(obj, scope){
@@ -46,6 +51,7 @@ var paginateController = function($scope,$element,$timeout){
     });
 
     $scope.addResults = function(){
+
         // Show loader
         $scope.loadingPage = true;
 
@@ -57,7 +63,7 @@ var paginateController = function($scope,$element,$timeout){
 
         // Add results to list
         try{
-            ctrl.pageFunc().success(function(r){
+            return ctrl.pageFunc().success(function(r){
                 // Parse JSON if necessary
                 if(!_.isObject(r.rdata)) r.rdata = JSON.parse(r.rdata)
 
@@ -96,12 +102,14 @@ var paginateController = function($scope,$element,$timeout){
                         $timeout(scroll.set);
 
                         // ready
-                        ready = true;
+                        return $scope.ready = true;
                     });
                 });
             }).error(function(r){
                 // Error
                 $scope.paginateError = true;
+
+                return false;
             });
         } catch(e){
             throw("angular-paginate: pageFunc has non-promise type return.")
@@ -129,19 +137,19 @@ var paginateController = function($scope,$element,$timeout){
         if(ctrl.type == 'scroll' && ctrl.direction == 'down') $scope.bscroll = true;
 
         // Bind scroll handlers
-        if(ctrl.type == 'scroll') scroll.bind();
+        ctrl.type == 'scroll' && scroll.bind();
 
         // Wait for data-binding to scroll to top/bottom
         $timeout(function(){
-            if(ctrl.direction == 'down') scroll.toTop();
-            if(ctrl.direction == 'up') scroll.toBottom();
+            ctrl.direction == 'down' && scroll.toTop();
+            ctrl.direction == 'up' && scroll.toBottom();
         });
 
         // Watches
         ctrl.$watchMany(['config.orderBy', 'config.query'], function(pre,post){
             // Dont listen for changes until data has initialized
             // Dont add results if not ready or query is being initialized
-            if(!ready || ((ctrl.config.query === '' && _.isUndefined(prevSearch)) && pre == post)) return;
+            if(!$scope.ready || ((ctrl.config.query === '' && _.isUndefined(prevSearch)) && pre == post)) return;
 
             // Save previous search
             prevSearch = ctrl.config.query;
@@ -167,6 +175,8 @@ var paginateController = function($scope,$element,$timeout){
 
         scroll.element.style.overflowY = "scroll";
         scroll.element.style.height = "100%";
+
+        init.readyToInit = true;
     };
 
     $scope.reset = function(){
@@ -202,7 +212,7 @@ var paginateController = function($scope,$element,$timeout){
         },
         bind : function(justUnbind){
             angular.element(scroll.element).unbind('scroll');
-            if(_.isUndefined(justUnbind)) angular.element(scroll.element).bind('scroll', function(e){
+            _.isUndefined(justUnbind) && angular.element(scroll.element).bind('scroll', function(e){
                 // Dont trigger on artificial scrolls
                 if(scroll.artificial){
                     scroll.artificial = false;
@@ -231,7 +241,21 @@ var paginateController = function($scope,$element,$timeout){
         scroll.artificial = true;
         ctrl.config.items = [];
         $scope.reset();
-        $timeout($scope.addResults);
+        if(!init.readyToInit){
+            return $timeout(ctrl.config.reset,200);
+        }
+
+        $timeout($scope.addResults).then(function(r){
+            init.initializing = false;
+            init.initialized = (r.status == 200);
+        });
+    }
+    ctrl.config.init = function(){
+        // If already initialized, or currently initializing, stop.
+        if(init.initialized || init.initializing) return;
+        // We are now initializing
+        init.initializing = true;
+        ctrl.config.reset();
     }
 };
 
