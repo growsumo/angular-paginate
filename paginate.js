@@ -1,13 +1,22 @@
-var paginateControllerDeps = ['$scope','$element','$timeout'];
-var paginateController = function($scope,$element,$timeout){
+var paginateControllerDeps = ['$scope','$element','$timeout','$rootScope'];
+var paginateController = function($scope,$element,$timeout,$rootScope){
 
+    // Private vars
     var prevSearch; // Saves previous search - important in keeping tabs on state
     var init = {
-        readyToInit : false,
-        initialized : false,
-        initializing : false,
+        'readyToInit' : false,
+        'initialized' : false,
+        'initializing' : false,
     };
-    $scope.ready = false; // Component is ready
+
+    // Public vars
+    _.assign($scope, {
+        'ready' : false, // Component is ready
+        'noMore' : false, // No more results to display
+        'loadingPage' : false, // Page is loading
+        'paginateError' : false, // An error has occurred
+        'on_first_page' : true, // Currently on first page of results
+    });
 
     // These are seperate because they will likely be implemented in a more global setting
     componentExtend = function(obj, scope){
@@ -30,8 +39,11 @@ var paginateController = function($scope,$element,$timeout){
     componentExtend(this,$scope)
     var ctrl = this;
 
+    //
     // Event Listeners
-    $scope.$on("paginate",function(e,d){
+    //
+
+    $rootScope.$on("paginate",function(e,d){
         if(d.id !== ctrl.config.id) return;
         // Execute method
         switch(d.method){
@@ -45,10 +57,14 @@ var paginateController = function($scope,$element,$timeout){
                 $scope.addResults();
                 break;
             case 'reset':
-                $scope.reset();
+                $timeout(ctrl.config.reset);
                 break;
         }
     });
+
+    //
+    // Public methods
+    //
 
     $scope.addResults = function(){
 
@@ -115,6 +131,10 @@ var paginateController = function($scope,$element,$timeout){
             throw("angular-paginate: pageFunc has non-promise type return.")
         }
     }
+
+    ctrl.$onDestroy = function(){
+        scroll.bind(true); // Unbind scroll
+    };
 
     ctrl.$onInit = function(){
         // No key on init
@@ -190,9 +210,9 @@ var paginateController = function($scope,$element,$timeout){
         $scope.on_first_page = true;
     }
 
-    ctrl.$onDestroy = function(){
-        scroll.bind(true); // Unbind scroll
-    };
+    //
+    // Dynamic scrolling
+    //
 
     var scroll = {
         old : 0, // Old scroll container height
@@ -234,28 +254,33 @@ var paginateController = function($scope,$element,$timeout){
     Object.defineProperty(scroll, 'element', { get : function(){return $element[0].firstChild;}}) // Element is a dynamic property
     Object.defineProperty(scroll, 'height', { get : function(){return scroll.element.scrollHeight;}}) // Element is a dynamic property
 
+    //
     // Externally accessible Functions
+    //
+
     ctrl.config.toBottom = function(){ scroll.toBottom(); }; // must stay anonymously wrapped
     ctrl.config.toTop = function(){ scroll.toTop(); }; // must stay anonymously wrapped
     ctrl.config.reset = function(){
         scroll.artificial = true;
         ctrl.config.items = [];
         $scope.reset();
-        if(!init.readyToInit){
-            return $timeout(ctrl.config.reset,200);
-        }
-
-        $timeout($scope.addResults).then(function(r){
+        return $timeout($scope.addResults).then(function(r){
+            // Done initializing
             init.initializing = false;
-            init.initialized = (r.status == 200);
+            // Was it successful?
+            return init.initialized = (r.status == 200);
         });
     }
     ctrl.config.init = function(){
+        if(!init.readyToInit){
+            return $timeout(ctrl.config.init, 200);
+        }
         // If already initialized, or currently initializing, stop.
         if(init.initialized || init.initializing) return;
         // We are now initializing
         init.initializing = true;
-        ctrl.config.reset();
+        // Call reset
+        return ctrl.config.reset();
     }
 };
 
