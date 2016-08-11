@@ -1,7 +1,10 @@
 var paginateControllerDeps = ['$scope', '$element', '$timeout', '$rootScope', 'componentExtend2'];
 var paginateController = function($scope, $element, $timeout, $rootScope, componentExtend2) {
 
+    //
     // Private vars
+    //
+
     var prevSearch; // Saves previous search - important in keeping tabs on state
     var init = {
         'readyToInit': false,
@@ -9,7 +12,10 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
         'initializing': false,
     };
 
+    //
     // Public vars
+    //
+
     _.assign($scope, {
         'ready': false, // Component is ready
         'noMore': false, // No more results to display
@@ -116,7 +122,7 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
         } catch (e) {
             throw ("angular-paginate: pageFunc has non-promise type return.")
         }
-    }
+    };
 
     ctrl.$onDestroy = function() {
         scroll.bind(true); // Unbind scroll
@@ -179,7 +185,7 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
 
         $scope.reset();
 
-        scroll.element.style.overflowY = "scroll";
+        scroll.element.style.overflowY = ctrl.hideScroll ? "hidden" : "scroll";
         scroll.element.style.height = "100%";
 
         init.readyToInit = true;
@@ -194,7 +200,7 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
         $scope.loadingPage = false;
         $scope.paginateError = false;
         $scope.on_first_page = true;
-    }
+    };
 
     //
     // Dynamic scrolling
@@ -237,16 +243,19 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
         }
     };
 
+    // Element is a dynamic property
     Object.defineProperty(scroll, 'element', {
-            get: function() {
-                return $element[0].firstChild;
-            }
-        }) // Element is a dynamic property
+        get: function() {
+            return $element[0].firstChild;
+        }
+    });
+
+    // Height is a dynamic property
     Object.defineProperty(scroll, 'height', {
-            get: function() {
-                return scroll.element.scrollHeight;
-            }
-        }) // Element is a dynamic property
+        get: function() {
+            return scroll.element.scrollHeight;
+        }
+    });
 
     //
     // Externally accessible Functions
@@ -255,9 +264,11 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
     ctrl.config.toBottom = function() {
         scroll.toBottom();
     }; // must stay anonymously wrapped
+
     ctrl.config.toTop = function() {
         scroll.toTop();
     }; // must stay anonymously wrapped
+
     ctrl.config.reset = function() {
         scroll.artificial = true;
         ctrl.config.items = [];
@@ -268,18 +279,17 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
             // Was it successful?
             return init.initialized = (r.status == 200);
         });
-    }
+    };
+
     ctrl.config.init = function() {
-        if (!init.readyToInit) {
-            return $timeout(ctrl.config.init, 200);
-        }
+        if (!init.readyToInit) return $timeout(ctrl.config.init, 200);
         // If already initialized, or currently initializing, stop.
         if (init.initialized || init.initializing) return;
         // We are now initializing
         init.initializing = true;
         // Call reset
         return ctrl.config.reset();
-    }
+    };
 };
 
 paginateController.$inject = paginateControllerDeps;
@@ -288,11 +298,12 @@ angular.module('paginate', [])
     .component('paginate', {
         transclude: true,
         bindings: {
-            config: '=',
+            config: '=', // Paginate configuration object
             type: '@', // Type of pagination: click or scroll
             direction: '@', // Direction of scrolling: up or down
-            pageFunc: '&',
+            pageFunc: '&', // Function that returns an http promise object
+            hideScroll: '@', // Hide the scroll bar
         },
         templateUrl: 'paginateTemplate.html',
         controller: paginateController
-    })
+    });
