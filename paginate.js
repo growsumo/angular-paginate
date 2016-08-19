@@ -120,7 +120,7 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
                 return false;
             });
         } catch (e) {
-            throw ("angular-paginate: pageFunc has non-promise type return.")
+            throw ("angular-paginate: pageFunc has non-promise type return.", e);
         }
     };
 
