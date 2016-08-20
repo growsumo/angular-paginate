@@ -75,12 +75,16 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
 
                 // Are there still more results?
                 // TODO: format adata, dont show on first pull
-                if (!r.rdata.length ||
-                    (ctrl.config.limit && r.rdata.length < ctrl.config.limit)
-                ) {
+                if (!r.rdata.length) {
                     $scope.noMore = true;
                     $scope.loadingPage = false;
                     return;
+                }
+
+                if (r.adata ||
+                    (ctrl.config.limit && r.rdata.length < ctrl.config.limit)
+                ) {
+                    $scope.noMore = true;
                 }
 
                 // Set last key
