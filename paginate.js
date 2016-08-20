@@ -68,20 +68,20 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
         try {
             return ctrl.pageFunc().success(function(r) {
                 // Parse JSON if necessary
-                if (!_.isObject(r.rdata)) r.rdata = JSON.parse(r.rdata)
+                if (!_.isObject(r.rdata)) r.rdata = JSON.parse(r.rdata);
 
                 // Check if response data is an array
                 if (!_.isArray(r.rdata)) throw (r);
 
                 // Are there still more results?
                 // TODO: format adata, dont show on first pull
-                if (!r.rdata.length) {
+                if (!r.rdata.length ||
+                    (ctrl.config.limit && r.rdata.length < ctrl.config.limit)
+                ) {
                     $scope.noMore = true;
                     $scope.loadingPage = false;
                     return;
                 }
-
-                if (r.adata) $scope.noMore = true;
 
                 // Set last key
 

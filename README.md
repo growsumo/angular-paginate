@@ -9,15 +9,22 @@ For this component to function properly, implementations should follow this proc
 ### JavaScript
 
 The angular implementation for this component is simple. Declare the paginate config object to set things up
-
-    $scope.paginate = {
-        id : 'test_paginate', // Name your paginate instance - this allows you to send it events for example scrollToBottom
-        items : [], // Your main content array, this should start empty
-        pageFunc : function(){
-            return messageEndpoints.getPage(ctrl.room, $scope.paginate.lastKey, $scope.paginate.orderBy, $scope.paginate.query);
-        }, // A function for getting more results based on $scope.paginate.lastKey, $scope.paginate.orderBy, $scope.paginate.query
+```js
+$scope.paginate = {
+    // Name your paginate instance - allows events, for example scrollToBottom
+    id : 'test_paginate',
+    items : [], // Your main content array, this should start empty
+    pageFunc : function(){
+        return messageEndpoints.getPage(
+            ctrl.room,
+            $scope.paginate.lastKey,
+            $scope.paginate.orderBy,
+            $scope.paginate.query,
+            $scope.paginate.limit
+        );
     }
-
+}
+```
 ##### Options
 
 There are a number of optional paginate configuration settings:
@@ -37,9 +44,11 @@ There are a number of optional paginate configuration settings:
 The most important piece in the implementation of this component is the page function or 'pageFunc'. This function must return
 a promise object that is resolved inside the component. Here is an example:
 
-    endpoint.getPage = function(room, lastKey) {
-        return $http.get(endpoint.url_prefix + '/roompage/' + room.key + '/' + lastKey);
-    };
+```js
+endpoint.getPage = function(room, lastKey) {
+    return $http.get(endpoint.url_prefix + '/roompage/' + room.key + '/' + lastKey);
+};
+```
 
 This function is very important because it fetches the data that is being paginated. You never have to call this function as
 it is called automatically by the component.
@@ -61,15 +70,16 @@ Make sure to include the 'id' and 'method' properties in the event data. Current
 
 ##### Finishing up
 
-When everything is set up in your controller, call `$scope.paginate.reset();` to initialize the component. This can also
-be called whenever you want to force a reload of the data. In messages this is used whenever a different room is selected.
+When everything is set up in your controller, call `$scope.paginate.reset();` to initialize the component.
+This can also be called whenever you want to force a reload of the data.
+In messages this is used whenever a different room is selected.
 
 ### HTML
 
 Angular-paginate currently supports two types of pagination schemes; click and scroll. Select a scheme by setting the
 type attribute to either 'click' or 'scroll'. The direction attribute selects whether the scroll progression is upward
 or downward. Set the direction attribute to 'up' or 'down' to choose the functionality.
-
+```html
     <!-- Supply the config object ($scope.paginate in this case), the page function, type and direction -->
     <paginate config="paginate" page-func="paginate.pageFunc()" type="scroll" direction="up">
         <!-- Here you can have a regular ng-repeat using the paginate.items array for content -->
@@ -77,3 +87,4 @@ or downward. Set the direction attribute to 'up' or 'down' to choose the functio
             {{message.content}}
         </div>
     </paginate>
+```
