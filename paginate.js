@@ -68,7 +68,7 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
         try {
             return ctrl.pageFunc().success(function(r) {
                 // Parse JSON if necessary
-                if (!_.isObject(r.rdata)) r.rdata = JSON.parse(r.rdata)
+                if (!_.isObject(r.rdata)) r.rdata = JSON.parse(r.rdata);
 
                 // Check if response data is an array
                 if (!_.isArray(r.rdata)) throw (r);
@@ -81,7 +81,11 @@ var paginateController = function($scope, $element, $timeout, $rootScope, compon
                     return;
                 }
 
-                if (r.adata) $scope.noMore = true;
+                if (r.adata ||
+                    (ctrl.config.limit && r.rdata.length < ctrl.config.limit)
+                ) {
+                    $scope.noMore = true;
+                }
 
                 // Set last key
 
